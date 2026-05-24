@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { loadProjectConfig, writeLocaleMetadata } from '@store-release-kit/core';
 import { createStoreAdapter, type StoreAdapterName } from '@store-release-kit/adapters';
 import { logger } from '../utils/logger.js';
+import { parseStoreProvider } from '../utils/options.js';
 
 interface PullOptions {
   version: string;
@@ -22,8 +23,9 @@ export async function runPullCommand(
   projectDir: string,
   options: PullOptions,
 ): Promise<PullCommandResult> {
+  const providerName = parseStoreProvider(options.provider);
   const config = await loadProjectConfig(projectDir);
-  const adapter = createStoreAdapter(options.provider ?? 'mock');
+  const adapter = createStoreAdapter(providerName);
   const result = await adapter.pullRelease({
     config,
     version: options.version,

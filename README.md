@@ -141,7 +141,14 @@ store-release pull --version 2.4.0 --provider fastlane --in ./fastlane/metadata
 
 ## 真实翻译 provider
 
-OpenAI provider 使用 `OPENAI_API_KEY`，默认模型可通过 `OPENAI_MODEL` 覆盖。DeepL provider 使用 `DEEPL_API_KEY`，可通过 `DEEPL_API_URL` 指向 free API endpoint。真实翻译生成内容仍会标记为 `reviewStatus: machine`，默认不能直接 push。
+OpenAI provider 使用 `OPENAI_API_KEY`，默认模型可通过 `OPENAI_MODEL` 覆盖。DeepL provider 使用 `DEEPL_API_KEY`，可通过 `DEEPL_API_URL` 指向 free API endpoint。真实 provider 默认带超时和有限重试，可用 `STORE_RELEASE_TRANSLATOR_TIMEOUT_MS`、`STORE_RELEASE_TRANSLATOR_MAX_RETRIES`、`STORE_RELEASE_TRANSLATOR_RETRY_DELAY_MS` 覆盖。真实翻译生成内容仍会标记为 `reviewStatus: machine`，默认不能直接 push。
+
+可选 live smoke 不会在缺少 key 时调用真实 API：
+
+```bash
+STORE_RELEASE_TRANSLATOR_PROVIDER=openai pnpm smoke:translators
+STORE_RELEASE_TRANSLATOR_PROVIDER=deepl pnpm smoke:translators
+```
 
 ## 未来路线图
 
@@ -160,6 +167,7 @@ pnpm lint
 pnpm dev
 pnpm typecheck
 pnpm smoke:example
+pnpm smoke:translators
 ```
 
 开发调试 CLI 帮助信息时可以使用：

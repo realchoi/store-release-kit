@@ -2,6 +2,7 @@ import type { Command } from 'commander';
 import { formatValidationReport, loadReleaseProject, validateRelease } from '@store-release-kit/core';
 import { createStoreAdapter, type StoreAdapterName } from '@store-release-kit/adapters';
 import { logger } from '../utils/logger.js';
+import { parseStoreProvider } from '../utils/options.js';
 
 interface PushOptions {
   version: string;
@@ -11,6 +12,7 @@ interface PushOptions {
 }
 
 export async function runPushCommand(projectDir: string, options: PushOptions): Promise<void> {
+  const providerName = parseStoreProvider(options.provider);
   const project = await loadReleaseProject(projectDir, options.version);
   const dryRun = options.dryRun ?? false;
 
@@ -27,7 +29,7 @@ export async function runPushCommand(projectDir: string, options: PushOptions): 
     throw new Error('push 被校验规则阻止。请完成人工审核或修复 metadata。');
   }
 
-  const adapter = createStoreAdapter(options.provider ?? 'mock');
+  const adapter = createStoreAdapter(providerName);
   const result = await adapter.pushRelease(
     options.yes === undefined ? { project, dryRun } : { project, dryRun, yes: options.yes },
   );

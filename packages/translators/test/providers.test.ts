@@ -13,6 +13,46 @@ const source = {
 };
 
 describe('OpenAITranslator', () => {
+  it('retries transient HTTP failures before parsing successful responses', async () => {
+    let attempts = 0;
+    const fetcher: typeof fetch = async () => {
+      attempts += 1;
+      if (attempts === 1) {
+        return new Response('rate limited', { status: 429 });
+      }
+
+      return new Response(
+        JSON.stringify({
+          output_text: JSON.stringify({
+            locales: {
+              'en-US': {
+                locale: 'en-US',
+                name: 'Pomodoro Plan',
+              },
+            },
+          }),
+        }),
+        { status: 200 },
+      );
+    };
+
+    const translator = new OpenAITranslator({
+      apiKey: 'test-key',
+      fetcher,
+      maxRetries: 1,
+      model: 'test-model',
+      retryDelayMs: 0,
+    });
+    const result = await translator.translateRelease({
+      sourceLocale: 'zh-Hans',
+      targetLocales: ['en-US'],
+      source,
+    });
+
+    expect(attempts).toBe(2);
+    expect(result.locales['en-US']?.name).toBe('Pomodoro Plan');
+  });
+
   it('uses the Responses API with structured output and parses locales', async () => {
     const requests: unknown[] = [];
     const fetcher: typeof fetch = async (_url, init) => {
@@ -115,9 +155,91 @@ describe('OpenAITranslator', () => {
       }),
     ).rejects.toThrow('Locked glossary term');
   });
+
+  it('rejects responses that do not include every requested target locale', async () => {
+    const fetcher: typeof fetch = async () =>
+      new Response(
+        JSON.stringify({
+          output_text: JSON.stringify({
+            locales: {},
+          }),
+        }),
+        { status: 200 },
+      );
+
+    const translator = new OpenAITranslator({ apiKey: 'test-key', fetcher, model: 'test-model' });
+
+    await expect(
+      translator.translateRelease({
+        sourceLocale: 'zh-Hans',
+        targetLocales: ['en-US'],
+        source,
+      }),
+    ).rejects.toThrow('OpenAI response missing locale en-US.');
+  });
+
+  it('rejects responses with malformed locale metadata', async () => {
+    const fetcher: typeof fetch = async () =>
+      new Response(
+        JSON.stringify({
+          output_text: JSON.stringify({
+            locales: {
+              'en-US': {
+                locale: 'en-US',
+                name: 42,
+              },
+            },
+          }),
+        }),
+        { status: 200 },
+      );
+
+    const translator = new OpenAITranslator({ apiKey: 'test-key', fetcher, model: 'test-model' });
+
+    await expect(
+      translator.translateRelease({
+        sourceLocale: 'zh-Hans',
+        targetLocales: ['en-US'],
+        source,
+      }),
+    ).rejects.toThrow('OpenAI response field en-US.name must be a string or null.');
+  });
 });
 
 describe('DeepLTranslator', () => {
+  it('retries transient network failures before parsing successful responses', async () => {
+    let attempts = 0;
+    const fetcher: typeof fetch = async (_url, init) => {
+      attempts += 1;
+      if (attempts === 1) {
+        throw new Error('network down');
+      }
+
+      const body = JSON.parse(String(init?.body)) as { text: string[] };
+      return new Response(
+        JSON.stringify({
+          translations: body.text.map((text) => ({ text: `[en] ${text}` })),
+        }),
+        { status: 200 },
+      );
+    };
+
+    const translator = new DeepLTranslator({
+      apiKey: 'test-key',
+      fetcher,
+      maxRetries: 1,
+      retryDelayMs: 0,
+    });
+    const result = await translator.translateRelease({
+      sourceLocale: 'zh-Hans',
+      targetLocales: ['en-US'],
+      source,
+    });
+
+    expect(attempts).toBe(2);
+    expect(result.locales['en-US']?.name).toBe('[en] 番茄计划');
+  });
+
   it('translates text fields with the DeepL translate endpoint', async () => {
     const requests: Array<{ url: string; body: Record<string, unknown> }> = [];
     const fetcher: typeof fetch = async (url, init) => {
@@ -151,5 +273,47 @@ describe('DeepLTranslator', () => {
       reviewStatus: 'machine',
       supportUrl: 'https://example.com/support',
     });
+  });
+
+  it('rejects responses with fewer translations than requested fields', async () => {
+    const fetcher: typeof fetch = async () =>
+      new Response(
+        JSON.stringify({
+          translations: [{ text: 'Pomodoro Plan' }],
+        }),
+        { status: 200 },
+      );
+
+    const translator = new DeepLTranslator({ apiKey: 'test-key', fetcher });
+
+    await expect(
+      translator.translateRelease({
+        sourceLocale: 'zh-Hans',
+        targetLocales: ['en-US'],
+        source,
+      }),
+    ).rejects.toThrow('DeepL response returned 1 translations for en-US, expected 4.');
+  });
+
+  it('rejects malformed translation entries', async () => {
+    const fetcher: typeof fetch = async (url, init) => {
+      const body = JSON.parse(String(init?.body)) as { text: string[] };
+      return new Response(
+        JSON.stringify({
+          translations: body.text.map(() => ({ text: 123 })),
+        }),
+        { status: 200 },
+      );
+    };
+
+    const translator = new DeepLTranslator({ apiKey: 'test-key', fetcher });
+
+    await expect(
+      translator.translateRelease({
+        sourceLocale: 'zh-Hans',
+        targetLocales: ['en-US'],
+        source,
+      }),
+    ).rejects.toThrow('DeepL response translation 0 for en-US must include text.');
   });
 });

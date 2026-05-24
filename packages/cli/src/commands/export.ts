@@ -4,16 +4,17 @@ import type { Command } from 'commander';
 import { loadReleaseProject } from '@store-release-kit/core';
 import { createStoreAdapter } from '@store-release-kit/adapters';
 import { logger } from '../utils/logger.js';
+import { parseExportFormat, type ExportFormat } from '../utils/options.js';
 
 interface ExportOptions {
   version: string;
-  format?: 'fastlane' | 'json';
+  format?: ExportFormat;
   out?: string;
 }
 
 export async function runExportCommand(projectDir: string, options: ExportOptions): Promise<void> {
+  const format = parseExportFormat(options.format);
   const project = await loadReleaseProject(projectDir, options.version);
-  const format = options.format ?? 'fastlane';
   const outDir = options.out ?? join(projectDir, 'dist', 'fastlane-metadata');
 
   if (format === 'json') {

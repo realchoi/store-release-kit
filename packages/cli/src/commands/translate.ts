@@ -11,6 +11,7 @@ import {
   type TranslatorProviderName,
 } from '@store-release-kit/translators';
 import { logger } from '../utils/logger.js';
+import { parseTranslationProvider } from '../utils/options.js';
 
 interface TranslateOptions {
   version: string;
@@ -51,6 +52,7 @@ export async function runTranslateCommand(
   projectDir: string,
   options: TranslateOptions,
 ): Promise<void> {
+  const providerName = parseTranslationProvider(options.provider);
   const project = await loadReleaseProject(projectDir, options.version);
   const sourceLocale = options.from ?? project.base.sourceLocale;
   const source = project.locales[sourceLocale];
@@ -63,7 +65,7 @@ export async function runTranslateCommand(
     options.to,
     project.config.targetLocales.filter((locale) => locale !== sourceLocale),
   );
-  const provider = createTranslatorProvider(options.provider ?? 'mock');
+  const provider = createTranslatorProvider(providerName);
   const translateInput = {
     sourceLocale,
     targetLocales,

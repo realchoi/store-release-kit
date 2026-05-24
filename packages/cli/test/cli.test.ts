@@ -4,8 +4,10 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { createProgram } from '../src/index.js';
+import { runExportCommand } from '../src/commands/export.js';
 import { runInitCommand } from '../src/commands/init.js';
 import { runPullCommand } from '../src/commands/pull.js';
+import { runTranslateCommand } from '../src/commands/translate.js';
 import { runValidateCommand } from '../src/commands/validate.js';
 
 describe('cli', () => {
@@ -75,5 +77,34 @@ describe('cli', () => {
     await expect(
       fs.readFile(join(dir, 'releases', '0.1.0', 'locales', 'ja.yml'), 'utf8'),
     ).resolves.toContain('name: 集中プラン');
+  });
+
+  it('rejects unsupported export formats before loading project files', async () => {
+    await expect(
+      runExportCommand('/does/not/exist', {
+        version: '0.1.0',
+        format: 'xml' as never,
+      }),
+    ).rejects.toThrow('Unsupported export format "xml". Expected one of: fastlane, json.');
+  });
+
+  it('rejects unsupported pull providers before loading project files', async () => {
+    await expect(
+      runPullCommand('/does/not/exist', {
+        version: '0.1.0',
+        provider: 'deepl' as never,
+      }),
+    ).rejects.toThrow(
+      'Unsupported store provider "deepl". Expected one of: mock, appstoreconnect, fastlane.',
+    );
+  });
+
+  it('rejects unsupported translate providers before loading project files', async () => {
+    await expect(
+      runTranslateCommand('/does/not/exist', {
+        version: '0.1.0',
+        provider: 'fastlane' as never,
+      }),
+    ).rejects.toThrow('Unsupported translation provider "fastlane". Expected one of: mock, openai, deepl.');
   });
 });

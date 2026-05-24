@@ -17,8 +17,8 @@
 - 更完整的 App Store 字段长度规则。
 - 更清晰的人类可读 validation report。
 - CI 示例和 GitHub Actions 模板。
-- OpenAI translator 真实实现。
-- DeepL translator 真实实现。
+- OpenAI translator 已有基础 API 调用、超时 / 重试和可选 live smoke；待补质量控制。
+- DeepL translator 已有基础 API 调用、超时 / 重试和可选 live smoke；待补质量控制。
 - glossary locked terms 强约束。
 
 ## v0.3

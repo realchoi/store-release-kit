@@ -16,6 +16,7 @@
   ],
   "scripts": {
     "build": "tsup",
+    "smoke:live": "node --import tsx src/liveSmoke.ts",
     "test": "vitest run --passWithNoTests",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit"
