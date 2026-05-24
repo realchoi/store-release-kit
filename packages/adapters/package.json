@@ -23,6 +23,7 @@
   "dependencies": {
     "@store-release-kit/core": "workspace:*",
     "fs-extra": "^11.2.0",
+    "jose": "^5.9.6",
     "undici": "^7.2.0"
   }
 }

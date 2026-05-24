@@ -6,8 +6,8 @@
 
 - `packages/core`：不依赖任何内部包，提供 zod schema、TypeScript 类型、release validation、metadata diff、本地 YAML 加载与写入。
 - `packages/cli`：依赖 core、translators、adapters，是 `store-release` 命令入口。
-- `packages/translators`：依赖 core，定义 `TranslatorProvider`，实现 mock、OpenAI 和 DeepL provider。
-- `packages/adapters`：依赖 core，定义 `StoreAdapter`，提供 mock adapter、Fastlane import/export、App Store Connect skeleton。
+- `packages/translators`：依赖 core，定义 `TranslatorProvider`，实现 mock、OpenAI 和 DeepL provider。网络 provider 默认由 CLI `--allow-network` 门禁保护。
+- `packages/adapters`：依赖 core，定义 `StoreAdapter`，提供 mock adapter、Fastlane import/export、App Store Connect localization client/adapter。
 
 依赖方向保持为：
 

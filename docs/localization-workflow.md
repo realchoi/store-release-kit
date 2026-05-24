@@ -14,9 +14,10 @@
 
 ```bash
 store-release translate --version 2.4.0 --from zh-Hans --to en-US,ja,ko --provider mock
+store-release translate --version 2.4.0 --from zh-Hans --to en-US --provider openai --allow-network
 ```
 
-`mock` provider 会给文本加 locale 前缀；`openai` 和 `deepl` provider 会调用真实翻译 API。生成结果都会标记：
+`mock` provider 会给文本加 locale 前缀；`openai` 和 `deepl` provider 会调用真实翻译 API，因此必须显式传入 `--allow-network`。默认读取 `glossary.yml`，也可以通过 `--glossary` 指定文件，通过 `--style-guide` 传入风格说明，通过 `--fields name,subtitle,whatsNew` 限定字段。生成结果都会标记：
 
 ```yaml
 reviewStatus: machine
@@ -36,10 +37,10 @@ store-release diff --from 2.3.0 --to 2.4.0
 
 ```bash
 store-release validate --version 2.4.0 --strict
-store-release push --version 2.4.0 --provider mock --dry-run
+store-release push --version 2.4.0 --provider mock
 ```
 
-如果存在 `reviewStatus: machine` 且配置不允许机器翻译发布，push 会被阻止。
+`push` 默认就是 dry-run，并写入 `.store-release/last-dry-run.json`。如果存在 `reviewStatus: machine` 且配置不允许机器翻译发布，push 会被阻止。真实 App Store Connect push 需要 `--no-dry-run --yes`，并要求 30 分钟内存在同 version/provider 的 dry-run 记录。
 
 ## 6. 导出 Fastlane metadata
 

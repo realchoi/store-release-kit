@@ -11,6 +11,8 @@ interface PullOptions {
   provider?: StoreAdapterName;
   in?: string;
   force?: boolean;
+  dryRun?: boolean;
+  outVersion?: string;
 }
 
 interface PullCommandResult {
@@ -25,6 +27,7 @@ export async function runPullCommand(
 ): Promise<PullCommandResult> {
   const providerName = parseStoreProvider(options.provider);
   const config = await loadProjectConfig(projectDir);
+  const outVersion = options.outVersion ?? options.version;
   const adapter = createStoreAdapter(providerName);
   const result = await adapter.pullRelease({
     config,
@@ -36,14 +39,19 @@ export async function runPullCommand(
 
   if (result.release) {
     for (const metadata of Object.values(result.release.locales)) {
-      const filePath = join(projectDir, 'releases', options.version, 'locales', `${metadata.locale}.yml`);
+      const filePath = join(projectDir, 'releases', outVersion, 'locales', `${metadata.locale}.yml`);
       if (!options.force && (await fs.pathExists(filePath))) {
         skippedLocales.push(metadata.locale);
         logger.warn(`跳过 ${metadata.locale}：locale 文件已存在。使用 --force 可覆盖。`);
         continue;
       }
 
-      await writeLocaleMetadata(projectDir, options.version, metadata);
+      if (options.dryRun) {
+        logger.info(`[dry-run] 将写入 ${metadata.locale} 到版本 ${outVersion}。`);
+        logger.log(JSON.stringify(metadata, null, 2));
+      } else {
+        await writeLocaleMetadata(projectDir, outVersion, metadata);
+      }
       writtenLocales.push(metadata.locale);
     }
   }
@@ -64,7 +72,9 @@ export function registerPullCommand(program: Command): void {
     .requiredOption('--version <version>', 'Release version')
     .option('--provider <provider>', 'Store provider: mock, appstoreconnect, fastlane', 'mock')
     .option('--in <path>', 'Input directory for local providers such as fastlane')
+    .option('--dry-run', 'Preview pulled metadata without writing files', false)
     .option('--force', 'Overwrite existing locale files', false)
+    .option('--out-version <version>', 'Write pulled locale files under a different release version')
     .action(async (options: PullOptions) => {
       await runPullCommand(process.cwd(), options);
     });

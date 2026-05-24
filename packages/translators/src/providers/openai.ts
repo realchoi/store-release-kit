@@ -1,11 +1,16 @@
 import 'dotenv/config';
-import type { LocaleMetadata } from '@store-release-kit/core';
-import type { TranslateReleaseInput, TranslatedRelease, TranslatorProvider } from '../types.js';
+import { LocaleMetadataSchema, type LocaleMetadata } from '@store-release-kit/core';
+import {
+  TranslatorError,
+  type TranslateReleaseInput,
+  type TranslatedRelease,
+  type TranslatorProvider,
+} from '../types.js';
 import { readRetryConfig, requestWithRetry, type RetryConfig } from './http.js';
 import { assertLockedTerms, normalizeTranslatedLocale } from './shared.js';
 
 const OPENAI_RESPONSES_URL = 'https://api.openai.com/v1/responses';
-const DEFAULT_OPENAI_MODEL = 'gpt-5-mini';
+const DEFAULT_OPENAI_MODEL = 'gpt-4.1-mini';
 
 interface OpenAITranslatorOptions {
   apiKey?: string;
@@ -79,7 +84,15 @@ function buildPrompt(input: TranslateReleaseInput): string {
   return JSON.stringify(
     {
       instruction:
-        'Translate App Store release metadata. Preserve meaning, keep app-store copy natural, obey glossary locked terms, and return only fields present in the schema.',
+        [
+          'Translate App Store release metadata.',
+          'Return only valid JSON matching the supplied schema; do not include markdown.',
+          'Preserve URLs exactly and do not translate URL fields.',
+          'Obey glossary locked terms exactly for each target locale.',
+          'Use the style guide when provided.',
+          'Localize keywords for ASO intent; do not mechanically transliterate unless appropriate.',
+          'Keep whatsNew concise, user-facing, and release-note appropriate.',
+        ].join(' '),
       sourceLocale: input.sourceLocale,
       targetLocales: input.targetLocales,
       source: input.source,
@@ -152,7 +165,9 @@ function validateOpenAIMetadata(locale: string, metadata: unknown): LocaleMetada
     throw new Error(`OpenAI response field ${locale}.locale must be "${locale}".`);
   }
 
-  return { ...metadata, locale } as LocaleMetadata;
+  const parsed = LocaleMetadataSchema.parse(removeNullFields({ ...metadata, locale } as LocaleMetadata));
+
+  return parsed;
 }
 
 function validateOpenAIPayload(
@@ -199,61 +214,76 @@ export class OpenAITranslator implements TranslatorProvider {
     this.model = options.model ?? process.env.OPENAI_MODEL ?? DEFAULT_OPENAI_MODEL;
     this.fetcher = options.fetcher ?? fetch;
     this.retryConfig = {
-      maxRetries: options.maxRetries ?? retryConfig.maxRetries,
+      maxRetries: options.maxRetries ?? Math.min(retryConfig.maxRetries, 1),
       retryDelayMs: options.retryDelayMs ?? retryConfig.retryDelayMs,
       timeoutMs: options.timeoutMs ?? retryConfig.timeoutMs,
     };
   }
 
   async translateRelease(input: TranslateReleaseInput): Promise<TranslatedRelease> {
-    const apiKey = this.apiKey;
-    if (!apiKey) {
-      throw new Error('OPENAI_API_KEY is not set.');
-    }
+    try {
+      const apiKey = this.apiKey;
+      if (!apiKey) {
+        throw new TranslatorError('openai', 'OPENAI_API_KEY is not set.');
+      }
 
-    const response = await requestWithRetry(
-      OPENAI_RESPONSES_URL,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: this.model,
-          input: buildPrompt(input),
-          text: {
-            format: {
-              type: 'json_schema',
-              name: 'store_release_translation',
-              strict: true,
-              schema: buildJsonSchema(input.targetLocales),
-            },
+      const response = await requestWithRetry(
+        OPENAI_RESPONSES_URL,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
           },
-        }),
-      },
-      {
-        fetcher: this.fetcher,
-        providerName: 'OpenAI',
-        ...this.retryConfig,
-      },
-    );
+          body: JSON.stringify({
+            model: this.model,
+            input: buildPrompt(input),
+            text: {
+              format: {
+                type: 'json_schema',
+                name: 'store_release_translation',
+                strict: true,
+                schema: buildJsonSchema(input.targetLocales),
+              },
+            },
+          }),
+        },
+        {
+          fetcher: this.fetcher,
+          providerName: 'OpenAI',
+          ...this.retryConfig,
+        },
+      );
 
-    if (!response.ok) {
-      throw new Error(`OpenAI translation failed with HTTP ${response.status}: ${await response.text()}`);
+      if (!response.ok) {
+        throw new TranslatorError(
+          'openai',
+          `OpenAI translation failed with HTTP ${response.status}: ${await response.text()}`,
+        );
+      }
+
+      const payload = parseResponseBody(await response.json());
+      const validatedLocales = validateOpenAIPayload(payload, input.targetLocales);
+      const locales = Object.fromEntries(
+        Object.entries(validatedLocales).map(([locale, metadata]) => [
+          locale,
+          normalizeTranslatedLocale(input, locale, removeNullFields(metadata)),
+        ]),
+      );
+
+      assertLockedTerms(input, locales);
+
+      return { locales };
+    } catch (error) {
+      if (error instanceof TranslatorError) {
+        throw error;
+      }
+
+      throw new TranslatorError(
+        'openai',
+        error instanceof Error ? error.message : 'OpenAI translation failed.',
+        error,
+      );
     }
-
-    const payload = parseResponseBody(await response.json());
-    const validatedLocales = validateOpenAIPayload(payload, input.targetLocales);
-    const locales = Object.fromEntries(
-      Object.entries(validatedLocales).map(([locale, metadata]) => [
-        locale,
-        normalizeTranslatedLocale(input, locale, removeNullFields(metadata)),
-      ]),
-    );
-
-    assertLockedTerms(input, locales);
-
-    return { locales };
   }
 }

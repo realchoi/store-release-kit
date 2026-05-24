@@ -64,7 +64,7 @@ store-release validate --version 2.4.0 --strict
 store-release validate --version 2.4.0 --strict --json
 store-release diff --from 2.3.0 --to 2.4.0 --locale en-US
 store-release translate --version 2.4.0 --from zh-Hans --to en-US,ja --provider mock
-store-release translate --version 2.4.0 --from zh-Hans --to en-US --provider openai
+store-release translate --version 2.4.0 --from zh-Hans --to en-US --provider openai --allow-network
 store-release export --version 2.4.0 --format fastlane --out ./dist/fastlane-metadata
 store-release pull --version 2.4.0 --provider fastlane --in ./fastlane/metadata
 store-release push --version 2.4.0 --provider mock --dry-run
@@ -76,7 +76,7 @@ store-release push --version 2.4.0 --provider mock --dry-run
 packages/core         schema、validation、diff、文件加载与写入
 packages/cli          store-release 命令行入口
 packages/translators  翻译 provider 接口和 mock/OpenAI/DeepL provider
-packages/adapters     store adapter、Fastlane import/export、App Store Connect skeleton
+packages/adapters     store adapter、Fastlane import/export、App Store Connect localization adapter
 examples/simple-ios-app 完整 iOS 示例 metadata
 docs/                 架构、schema、工作流和路线图
 ```
@@ -112,7 +112,15 @@ reviewStatus: approved
 
 ## Review / dry-run / push 安全机制
 
-`push` 第一版只允许 `--dry-run`，不会真实提交到任何应用商店。若 locale 的 `reviewStatus` 是 `machine`，且配置不允许机器翻译直接发布，push 校验会失败。未来真实 push 也会先走相同 validation gate。
+`push` 默认执行 dry-run，并写入 `.store-release/last-dry-run.json`。真实 App Store Connect push 必须同时满足：
+
+- 显式传入 `--no-dry-run --yes`。
+- 30 分钟内做过同 version/provider 的 dry-run。
+- `validateRelease(..., { strict: true, forPush: true })` 通过。
+- 没有被 safety 配置阻止的 `reviewStatus: machine` locale。
+- 如配置了 `release.safety.allowPushBranches`，当前 Git 分支必须在 allowlist 内。
+
+真实 push 当前只创建或更新 editable App Store version 的 localization metadata，不会创建新版本、上传截图或提交审核。`mock` 和 `fastlane` adapter 仍不执行真实远端提交。
 
 ## Fastlane export 示例
 
@@ -141,7 +149,7 @@ store-release pull --version 2.4.0 --provider fastlane --in ./fastlane/metadata
 
 ## 真实翻译 provider
 
-OpenAI provider 使用 `OPENAI_API_KEY`，默认模型可通过 `OPENAI_MODEL` 覆盖。DeepL provider 使用 `DEEPL_API_KEY`，可通过 `DEEPL_API_URL` 指向 free API endpoint。真实 provider 默认带超时和有限重试，可用 `STORE_RELEASE_TRANSLATOR_TIMEOUT_MS`、`STORE_RELEASE_TRANSLATOR_MAX_RETRIES`、`STORE_RELEASE_TRANSLATOR_RETRY_DELAY_MS` 覆盖。真实翻译生成内容仍会标记为 `reviewStatus: machine`，默认不能直接 push。
+OpenAI provider 使用 `OPENAI_API_KEY`，默认模型是 `gpt-4.1-mini`，可通过 `OPENAI_MODEL` 覆盖。DeepL provider 使用 `DEEPL_API_KEY`，可通过 `DEEPL_API_URL` 指向 free API endpoint。真实网络 provider 必须显式传入 `--allow-network`，默认带超时和有限重试，可用 `STORE_RELEASE_TRANSLATOR_TIMEOUT_MS`、`STORE_RELEASE_TRANSLATOR_MAX_RETRIES`、`STORE_RELEASE_TRANSLATOR_RETRY_DELAY_MS` 覆盖。真实翻译生成内容仍会标记为 `reviewStatus: machine`，默认不能直接 push。
 
 可选 live smoke 不会在缺少 key 时调用真实 API：
 
@@ -152,9 +160,9 @@ STORE_RELEASE_TRANSLATOR_PROVIDER=deepl pnpm smoke:translators
 
 ## 未来路线图
 
-- MVP：CLI、schema、validation、mock translator、Fastlane export、dry-run push。
-- v0.2：Fastlane import、字段长度规则、validation report、CI 模板。
-- v0.3：App Store Connect pull、release 之间的结构化 diff report。
+- MVP：CLI、schema、validation、mock translator、Fastlane import/export、JSON export、dry-run push。
+- v0.2：OpenAI/DeepL provider、字段长度规则、validation report、CI 模板。
+- v0.3：App Store Connect localization pull/push、release 之间的结构化 diff report。
 - v1.0：稳定 adapter API、多平台 store provider、Web UI 管理界面。
 
 ## 开发命令

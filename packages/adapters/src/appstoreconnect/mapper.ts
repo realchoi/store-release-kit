@@ -1,31 +1,70 @@
 import type { LocaleMetadata, ReleaseProject } from '@store-release-kit/core';
-import type { AppStoreConnectLocalePayload, AppStoreConnectReleasePayload } from './types.js';
+import type {
+  AppStoreConnectLocalizationAttributes,
+  AppStoreConnectPushPlan,
+} from './types.js';
 
-export function mapLocaleToAppStoreConnectPayload(
+function assignIfDefined<T extends object, K extends keyof T>(target: T, key: K, value: T[K]): void {
+  if (value !== undefined) {
+    target[key] = value;
+  }
+}
+
+export function mapLocaleToAppStoreConnectAttributes(
   metadata: LocaleMetadata,
-): AppStoreConnectLocalePayload {
-  const payload: AppStoreConnectLocalePayload = {
+): AppStoreConnectLocalizationAttributes {
+  const attributes: AppStoreConnectLocalizationAttributes = {
     locale: metadata.locale,
   };
 
-  if (metadata.name) payload.name = metadata.name;
-  if (metadata.subtitle) payload.subtitle = metadata.subtitle;
-  if (metadata.promotionalText) payload.promotionalText = metadata.promotionalText;
-  if (metadata.description) payload.description = metadata.description;
-  if (metadata.keywords?.length) payload.keywords = metadata.keywords.join(',');
-  if (metadata.whatsNew) payload.whatsNew = metadata.whatsNew;
-  if (metadata.supportUrl) payload.supportUrl = metadata.supportUrl;
-  if (metadata.marketingUrl) payload.marketingUrl = metadata.marketingUrl;
+  assignIfDefined(attributes, 'name', metadata.name);
+  assignIfDefined(attributes, 'subtitle', metadata.subtitle);
+  assignIfDefined(attributes, 'promotionalText', metadata.promotionalText);
+  assignIfDefined(attributes, 'description', metadata.description);
+  assignIfDefined(attributes, 'keywords', metadata.keywords?.join(','));
+  assignIfDefined(attributes, 'whatsNew', metadata.whatsNew);
+  assignIfDefined(attributes, 'supportUrl', metadata.supportUrl);
+  assignIfDefined(attributes, 'marketingUrl', metadata.marketingUrl);
 
-  return payload;
+  return attributes;
+}
+
+export function mapAppStoreConnectAttributesToLocale(
+  attributes: AppStoreConnectLocalizationAttributes,
+): LocaleMetadata {
+  return {
+    locale: attributes.locale,
+    ...(attributes.name !== undefined ? { name: attributes.name } : {}),
+    ...(attributes.subtitle !== undefined ? { subtitle: attributes.subtitle } : {}),
+    ...(attributes.promotionalText !== undefined
+      ? { promotionalText: attributes.promotionalText }
+      : {}),
+    ...(attributes.description !== undefined ? { description: attributes.description } : {}),
+    ...(attributes.keywords !== undefined
+      ? {
+          keywords: attributes.keywords
+            .split(',')
+            .map((keyword) => keyword.trim())
+            .filter(Boolean),
+        }
+      : {}),
+    ...(attributes.whatsNew !== undefined ? { whatsNew: attributes.whatsNew } : {}),
+    ...(attributes.supportUrl !== undefined ? { supportUrl: attributes.supportUrl } : {}),
+    ...(attributes.marketingUrl !== undefined ? { marketingUrl: attributes.marketingUrl } : {}),
+    reviewStatus: 'human-reviewed',
+  };
 }
 
 export function mapReleaseToAppStoreConnectPayload(
   project: ReleaseProject,
-): AppStoreConnectReleasePayload {
+): Omit<AppStoreConnectPushPlan, 'appStoreVersionId' | 'dryRun'> {
   return {
     appId: project.config.appId,
     version: project.base.version,
-    locales: Object.values(project.locales).map(mapLocaleToAppStoreConnectPayload),
+    localizations: Object.values(project.locales).map((metadata) => ({
+      action: 'create',
+      locale: metadata.locale,
+      attributes: mapLocaleToAppStoreConnectAttributes(metadata),
+    })),
   };
 }

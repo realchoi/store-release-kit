@@ -8,6 +8,22 @@ targetLocales:
   - ko
 store:
   provider: mock
+  appStoreConnect:
+    issuerId: APPSTORE_CONNECT_ISSUER_ID
+    keyId: APPSTORE_CONNECT_KEY_ID
+    privateKeyEnv: APPSTORE_CONNECT_PRIVATE_KEY
+    appId: '1234567890'
+    bundleId: com.example.simple-ios-app
+    defaultPlatform: IOS
+    apiBaseUrl: https://api.appstoreconnect.apple.com/v1
+    timeoutMs: 30000
+release:
+  safety:
+    requireDryRunBeforePush: true
+    blockMachineTranslations: true
+    allowPushBranches:
+      - main
+      - release
 rules:
   requireReviewBeforePush: true
   allowMachineTranslation: false

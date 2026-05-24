@@ -1,5 +1,6 @@
 import type { LocaleMetadata } from '../schema/locale.js';
 import type { ReleaseProject } from '../schema/release.js';
+import { getReleaseSafety } from '../schema/safety.js';
 import { validateAppStoreFieldRules } from './appStoreRules.js';
 import {
   createValidationResult,
@@ -163,10 +164,10 @@ function validatePushReviewState(
   metadata: LocaleMetadata,
 ): void {
   const { project } = context;
+  const safety = getReleaseSafety(project.config);
   const blocksMachineTranslation =
     context.forPush &&
-    project.config.rules.requireReviewBeforePush &&
-    !project.config.rules.allowMachineTranslation &&
+    safety.blockMachineTranslations &&
     metadata.reviewStatus === 'machine';
 
   if (!blocksMachineTranslation) {

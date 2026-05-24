@@ -5,8 +5,10 @@ export * from './appstoreconnect/client.js';
 export * from './appstoreconnect/jwt.js';
 export * from './appstoreconnect/mapper.js';
 export * from './appstoreconnect/types.js';
+export * from './appstoreconnect/adapter.js';
 
-import { NotImplementedError, validateRelease } from '@store-release-kit/core';
+import { NotImplementedError } from '@store-release-kit/core';
+import { AppStoreConnectAdapter } from './appstoreconnect/adapter.js';
 import { exportFastlaneMetadata } from './fastlane/exportMetadata.js';
 import { importFastlaneMetadata } from './fastlane/importMetadata.js';
 import type {
@@ -87,37 +89,6 @@ export class FastlaneAdapter implements StoreAdapter {
     }
 
     return exportFastlaneMetadata(input);
-  }
-}
-
-export class AppStoreConnectAdapter implements StoreAdapter {
-  name = 'appstoreconnect' as const;
-
-  async pullRelease(_input: PullReleaseInput): Promise<PullReleaseResult> {
-    throw new NotImplementedError(
-      'App Store Connect pull is a skeleton and does not call the API yet.',
-    );
-  }
-
-  async pushRelease(input: PushReleaseInput): Promise<PushReleaseResult> {
-    const validation = validateRelease(input.project, { forPush: true, strict: true });
-    if (!validation.ok) {
-      return {
-        pushed: false,
-        message: `Push blocked by validation: ${validation.errors.map((issue) => issue.message).join('; ')}`,
-      };
-    }
-
-    if (!input.dryRun) {
-      throw new NotImplementedError(
-        'App Store Connect push is a skeleton and does not call the API yet.',
-      );
-    }
-
-    return {
-      pushed: false,
-      message: 'App Store Connect dry-run completed. No API call was made.',
-    };
   }
 }
 

@@ -46,6 +46,9 @@ importers:
       fs-extra:
         specifier: ^11.2.0
         version: 11.3.5
+      jose:
+        specifier: ^5.9.6
+        version: 5.10.0
       undici:
         specifier: ^7.2.0
         version: 7.25.0
@@ -1776,6 +1779,12 @@ packages:
         integrity: sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==,
       }
 
+  jose@5.10.0:
+    resolution:
+      {
+        integrity: sha512-s+3Al/p9g32Iq+oqXxkW//7jk2Vig6FF1CFqzVXoTUXt2qz89YWbL+OwS17NFYEvxC35n0FKeGO2LGYSxeM2Gg==,
+      }
+
   joycon@3.1.1:
     resolution:
       {
@@ -3296,6 +3305,8 @@ snapshots:
       is-extglob: 2.1.1
 
   isexe@2.0.0: {}
+
+  jose@5.10.0: {}
 
   joycon@3.1.1: {}
 

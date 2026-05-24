@@ -19,3 +19,14 @@ export interface TranslatorProvider {
   name: TranslatorProviderName;
   translateRelease(input: TranslateReleaseInput): Promise<TranslatedRelease>;
 }
+
+export class TranslatorError extends Error {
+  constructor(
+    readonly provider: TranslatorProviderName,
+    message: string,
+    readonly cause?: unknown,
+  ) {
+    super(message);
+    this.name = 'TranslatorError';
+  }
+}

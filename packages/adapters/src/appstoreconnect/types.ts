@@ -4,7 +4,21 @@ export interface AppStoreConnectCredentials {
   privateKey: string;
 }
 
-export interface AppStoreConnectLocalePayload {
+export type AppStoreConnectPlatform = 'IOS' | 'MAC_OS' | 'TV_OS' | 'VISION_OS';
+
+export interface AppStoreConnectVersionAttributes {
+  versionString: string;
+  platform: AppStoreConnectPlatform;
+  appStoreState?: string;
+}
+
+export interface AppStoreConnectVersionResource {
+  id: string;
+  type: 'appStoreVersions';
+  attributes: AppStoreConnectVersionAttributes;
+}
+
+export interface AppStoreConnectLocalizationAttributes {
   locale: string;
   name?: string;
   subtitle?: string;
@@ -16,8 +30,31 @@ export interface AppStoreConnectLocalePayload {
   marketingUrl?: string;
 }
 
-export interface AppStoreConnectReleasePayload {
+export interface AppStoreConnectLocalizationResource {
+  id: string;
+  type: 'appStoreVersionLocalizations';
+  attributes: AppStoreConnectLocalizationAttributes;
+}
+
+export interface AppStoreConnectJsonApiList<T> {
+  data: T[];
+}
+
+export interface AppStoreConnectJsonApiItem<T> {
+  data: T;
+}
+
+export interface AppStoreConnectLocalizationPlanItem {
+  action: 'create' | 'update';
+  locale: string;
+  localizationId?: string;
+  attributes: AppStoreConnectLocalizationAttributes;
+}
+
+export interface AppStoreConnectPushPlan {
   appId: string;
   version: string;
-  locales: AppStoreConnectLocalePayload[];
+  appStoreVersionId: string;
+  dryRun: boolean;
+  localizations: AppStoreConnectLocalizationPlanItem[];
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DeepLTranslator, OpenAITranslator } from '../src/index.js';
+import { DeepLTranslator, OpenAITranslator, TranslatorError } from '../src/index.js';
 
 const source = {
   locale: 'zh-Hans',
@@ -13,6 +13,18 @@ const source = {
 };
 
 describe('OpenAITranslator', () => {
+  it('requires an API key and wraps failures in TranslatorError', async () => {
+    const translator = new OpenAITranslator({ apiKey: '', fetcher: async () => new Response() });
+
+    await expect(
+      translator.translateRelease({
+        sourceLocale: 'zh-Hans',
+        targetLocales: ['en-US'],
+        source,
+      }),
+    ).rejects.toBeInstanceOf(TranslatorError);
+  });
+
   it('retries transient HTTP failures before parsing successful responses', async () => {
     let attempts = 0;
     const fetcher: typeof fetch = async () => {
@@ -93,6 +105,8 @@ describe('OpenAITranslator', () => {
         },
       },
     });
+    expect(JSON.stringify(requests[0])).toContain('Obey glossary locked terms');
+    expect(JSON.stringify(requests[0])).toContain('Preserve URLs exactly');
     expect(
       (
         requests[0] as {
@@ -176,6 +190,26 @@ describe('OpenAITranslator', () => {
         source,
       }),
     ).rejects.toThrow('OpenAI response missing locale en-US.');
+  });
+
+  it('rejects non-JSON OpenAI output', async () => {
+    const fetcher: typeof fetch = async () =>
+      new Response(
+        JSON.stringify({
+          output_text: 'not json',
+        }),
+        { status: 200 },
+      );
+
+    const translator = new OpenAITranslator({ apiKey: 'test-key', fetcher, model: 'test-model' });
+
+    await expect(
+      translator.translateRelease({
+        sourceLocale: 'zh-Hans',
+        targetLocales: ['en-US'],
+        source,
+      }),
+    ).rejects.toBeInstanceOf(TranslatorError);
   });
 
   it('rejects responses with malformed locale metadata', async () => {
