@@ -1,0 +1,14 @@
+terms:
+  - source: '番茄计划'
+    translations:
+      en-US: 'Pomodoro Plan'
+      ja: 'ポモドーロ計画'
+      ko: '토마토 플랜'
+    locked: true
+    note: '产品名保持统一。'
+  - source: '周报仪表盘'
+    translations:
+      en-US: 'weekly dashboard'
+      ja: '週間ダッシュボード'
+      ko: '주간 대시보드'
+    locked: false

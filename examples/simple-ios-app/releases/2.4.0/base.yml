@@ -1,0 +1,8 @@
+version: 2.4.0
+build: '240'
+sourceLocale: zh-Hans
+status: reviewed
+createdAt: '2026-05-24T00:00:00.000Z'
+notes:
+  - '新增周报仪表盘。'
+  - '优化同步体验。'

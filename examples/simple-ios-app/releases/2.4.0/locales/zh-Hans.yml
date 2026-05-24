@@ -1,0 +1,23 @@
+locale: zh-Hans
+name: '番茄计划'
+subtitle: '专注、待办与习惯追踪'
+promotionalText: '全新的周报仪表盘，更快的同步体验。'
+description: |
+  番茄计划帮助你把专注、待办和习惯追踪放在同一个工作流里。
+  你可以规划每天的任务，使用番茄钟保持节奏，并通过周报了解自己的专注趋势。
+  所有数据都围绕行动设计，适合个人效率提升和轻量团队协作。
+keywords:
+  - '番茄钟'
+  - '专注'
+  - '待办'
+  - '习惯'
+  - '效率'
+whatsNew: |
+  - 新增周报仪表盘，快速查看专注时间和任务完成趋势。
+  - 优化多设备同步速度，减少等待时间。
+  - 改进习惯追踪列表的可读性和操作反馈。
+supportUrl: 'https://example.com/support'
+marketingUrl: 'https://example.com'
+reviewStatus: approved
+translatorNotes:
+  - '源语言文案，已人工审核。'

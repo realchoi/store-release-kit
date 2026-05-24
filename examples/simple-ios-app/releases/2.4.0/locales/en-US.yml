@@ -1,0 +1,23 @@
+locale: en-US
+name: 'Pomodoro Plan'
+subtitle: 'Focus, todos, and habit tracking'
+promotionalText: 'A new weekly dashboard and faster sync experience.'
+description: |
+  Pomodoro Plan brings focus sessions, todos, and habit tracking into one workflow.
+  Plan your daily tasks, stay on pace with a Pomodoro timer, and understand your focus trends through weekly reports.
+  The experience is designed around action, making it useful for personal productivity and lightweight team routines.
+keywords:
+  - 'pomodoro'
+  - 'focus'
+  - 'todo'
+  - 'habit'
+  - 'productivity'
+whatsNew: |
+  - Added a weekly dashboard for focus time and task completion trends.
+  - Improved sync speed across devices.
+  - Refined habit tracking lists for better readability and feedback.
+supportUrl: 'https://example.com/support'
+marketingUrl: 'https://example.com'
+reviewStatus: approved
+translatorNotes:
+  - '人工审核英文示例。'

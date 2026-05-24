@@ -1,0 +1,50 @@
+# 本地化工作流
+
+`store-release-kit` 的本地化流程围绕源语言、目标语言、术语表、机器翻译、人工审核和发布前校验展开。
+
+## 1. 维护主语言
+
+在 `releases/<version>/locales/<defaultLocale>.yml` 中维护源文案。源文案通常由产品、运营或开发者直接编写，并标记为 `approved`。
+
+## 2. 维护术语表
+
+在 `glossary.yml` 中维护产品名、功能名、品牌词和不希望自由翻译的术语。`locked: true` 的术语应被 provider 优先保留。
+
+## 3. 生成机器翻译
+
+```bash
+store-release translate --version 2.4.0 --from zh-Hans --to en-US,ja,ko --provider mock
+```
+
+第一版 mock provider 会给文本加 locale 前缀，真实 OpenAI / DeepL provider 后续接入。生成结果会标记：
+
+```yaml
+reviewStatus: machine
+```
+
+## 4. Review 和 diff
+
+翻译后使用 Git diff 或 CLI diff 审查：
+
+```bash
+store-release diff --from 2.3.0 --to 2.4.0
+```
+
+人工审核完成后，把 locale 文件中的 `reviewStatus` 改为 `human-reviewed` 或 `approved`。
+
+## 5. 校验和发布前 dry-run
+
+```bash
+store-release validate --version 2.4.0 --strict
+store-release push --version 2.4.0 --provider mock --dry-run
+```
+
+如果存在 `reviewStatus: machine` 且配置不允许机器翻译发布，push 会被阻止。
+
+## 6. 导出 Fastlane metadata
+
+```bash
+store-release export --version 2.4.0 --format fastlane --out ./dist/fastlane-metadata
+```
+
+导出的目录可以交给 Fastlane 或其他发布流水线使用。

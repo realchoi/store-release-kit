@@ -1,0 +1,27 @@
+{
+  "name": "@store-release-kit/translators",
+  "version": "0.1.0",
+  "description": "Translation provider interfaces and implementations for store-release-kit.",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run --passWithNoTests",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@store-release-kit/core": "workspace:*",
+    "dotenv": "^16.4.7"
+  }
+}

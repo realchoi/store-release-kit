@@ -1,0 +1,28 @@
+{
+  "name": "@store-release-kit/adapters",
+  "version": "0.1.0",
+  "description": "Store adapters and Fastlane metadata export for store-release-kit.",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@store-release-kit/core": "workspace:*",
+    "fs-extra": "^11.2.0",
+    "undici": "^7.2.0"
+  }
+}

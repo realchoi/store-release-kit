@@ -1,0 +1,23 @@
+locale: ja
+name: 'ポモドーロ計画'
+subtitle: '集中、ToDo、習慣トラッキング'
+promotionalText: '新しい週間ダッシュボードと、より速い同期体験。'
+description: |
+  ポモドーロ計画は、集中セッション、ToDo、習慣トラッキングをひとつのワークフローにまとめます。
+  毎日のタスクを計画し、ポモドーロタイマーでペースを保ち、週間レポートで集中の傾向を確認できます。
+  個人の生産性向上と軽量なチーム運用に向けて、行動しやすい体験を重視しています。
+keywords:
+  - 'ポモドーロ'
+  - '集中'
+  - 'ToDo'
+  - '習慣'
+  - '効率'
+whatsNew: |
+  - 集中時間とタスク完了傾向を確認できる週間ダッシュボードを追加しました。
+  - 複数デバイス間の同期速度を改善しました。
+  - 習慣トラッキング一覧の読みやすさと操作フィードバックを改善しました。
+supportUrl: 'https://example.com/support'
+marketingUrl: 'https://example.com'
+reviewStatus: approved
+translatorNotes:
+  - '人工审核日文示例。'

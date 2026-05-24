@@ -1,0 +1,14 @@
+appId: '1234567890'
+platform: ios
+defaultLocale: zh-Hans
+targetLocales:
+  - zh-Hans
+  - en-US
+  - ja
+  - ko
+store:
+  provider: mock
+rules:
+  requireReviewBeforePush: true
+  allowMachineTranslation: false
+  maxKeywordsCount: 100
