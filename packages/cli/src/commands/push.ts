@@ -1,5 +1,5 @@
 import type { Command } from 'commander';
-import { loadReleaseProject, validateRelease } from '@store-release-kit/core';
+import { formatValidationReport, loadReleaseProject, validateRelease } from '@store-release-kit/core';
 import { createStoreAdapter, type StoreAdapterName } from '@store-release-kit/adapters';
 import { logger } from '../utils/logger.js';
 
@@ -20,12 +20,7 @@ export async function runPushCommand(projectDir: string, options: PushOptions): 
   }
 
   const validation = validateRelease(project, { strict: true, forPush: true });
-  for (const warning of validation.warnings) {
-    logger.warn(`${warning.code}: ${warning.message}`);
-  }
-  for (const error of validation.errors) {
-    logger.error(`${error.code}: ${error.message}`);
-  }
+  logger.log(formatValidationReport(validation));
 
   if (!validation.ok) {
     process.exitCode = 1;

@@ -82,4 +82,44 @@ describe('validateRelease', () => {
     expect(result.ok).toBe(false);
     expect(result.errors.some((issue) => issue.code === 'KEYWORDS_TOO_MANY')).toBe(true);
   });
+
+  it('enforces App Store text field length limits', () => {
+    const project = createProject();
+    project.locales['zh-Hans'] = {
+      ...project.locales['zh-Hans']!,
+      name: 'a'.repeat(31),
+      subtitle: 'b'.repeat(31),
+      promotionalText: 'c'.repeat(171),
+      description: 'd'.repeat(4001),
+      whatsNew: 'e'.repeat(4001),
+    };
+
+    const result = validateRelease(project);
+
+    expect(result.ok).toBe(false);
+    expect(result.errors.map((issue) => issue.code)).toEqual(
+      expect.arrayContaining([
+        'NAME_TOO_LONG',
+        'SUBTITLE_TOO_LONG',
+        'PROMOTIONAL_TEXT_TOO_LONG',
+        'DESCRIPTION_TOO_LONG',
+        'WHATS_NEW_TOO_LONG',
+      ]),
+    );
+  });
+
+  it('enforces App Store keywords byte length and item length', () => {
+    const project = createProject();
+    project.locales['zh-Hans'] = {
+      ...project.locales['zh-Hans']!,
+      keywords: ['a'.repeat(101), 'ok'],
+    };
+
+    const result = validateRelease(project);
+
+    expect(result.ok).toBe(false);
+    expect(result.errors.map((issue) => issue.code)).toEqual(
+      expect.arrayContaining(['KEYWORDS_TOO_LONG', 'KEYWORD_TOO_LONG']),
+    );
+  });
 });

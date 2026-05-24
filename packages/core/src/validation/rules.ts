@@ -1,5 +1,4 @@
 export const DEFAULT_MAX_KEYWORDS_COUNT = 100;
-export const APP_STORE_PROMOTIONAL_TEXT_MAX_LENGTH = 170;
 
 export type ValidationSeverity = 'error' | 'warning';
 

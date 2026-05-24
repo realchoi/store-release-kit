@@ -5,6 +5,8 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { createProgram } from '../src/index.js';
 import { runInitCommand } from '../src/commands/init.js';
+import { runPullCommand } from '../src/commands/pull.js';
+import { runValidateCommand } from '../src/commands/validate.js';
 
 describe('cli', () => {
   it('can output help', () => {
@@ -30,5 +32,48 @@ describe('cli', () => {
       true,
     );
     expect(await fs.pathExists(join(dir, 'releases', '0.1.0', 'locales', 'en-US.yml'))).toBe(true);
+  });
+
+  it('validate can emit JSON reports', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'store-release-kit-'));
+    await runInitCommand(dir, {
+      appId: '1234567890',
+      defaultLocale: 'zh-Hans',
+      targetLocales: 'zh-Hans,en-US',
+    });
+
+    const result = await runValidateCommand(dir, {
+      version: '0.1.0',
+      json: true,
+    });
+
+    expect(result.ok).toBe(true);
+    expect(result.report).toContain('"ok": true');
+  });
+
+  it('pull imports fastlane metadata into release locale files', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'store-release-kit-'));
+    const sourceDir = await mkdtemp(join(tmpdir(), 'fastlane-source-'));
+    await runInitCommand(dir, {
+      appId: '1234567890',
+      defaultLocale: 'zh-Hans',
+      targetLocales: 'zh-Hans,en-US',
+    });
+
+    await fs.ensureDir(join(sourceDir, 'ja'));
+    await fs.writeFile(join(sourceDir, 'ja', 'name.txt'), '集中プラン', 'utf8');
+    await fs.writeFile(join(sourceDir, 'ja', 'description.txt'), '説明文', 'utf8');
+    await fs.writeFile(join(sourceDir, 'ja', 'release_notes.txt'), '更新内容', 'utf8');
+
+    const result = await runPullCommand(dir, {
+      version: '0.1.0',
+      provider: 'fastlane',
+      in: sourceDir,
+    });
+
+    expect(result.writtenLocales).toEqual(['ja']);
+    await expect(
+      fs.readFile(join(dir, 'releases', '0.1.0', 'locales', 'ja.yml'), 'utf8'),
+    ).resolves.toContain('name: 集中プラン');
   });
 });

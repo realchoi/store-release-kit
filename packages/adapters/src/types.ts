@@ -10,6 +10,7 @@ export type StoreAdapterName = 'mock' | 'appstoreconnect' | 'fastlane';
 export interface PullReleaseInput {
   config: ProjectConfig;
   version: string;
+  sourceDir?: string;
 }
 
 export interface PullReleaseResult {

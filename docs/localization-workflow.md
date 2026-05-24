@@ -16,7 +16,7 @@
 store-release translate --version 2.4.0 --from zh-Hans --to en-US,ja,ko --provider mock
 ```
 
-第一版 mock provider 会给文本加 locale 前缀，真实 OpenAI / DeepL provider 后续接入。生成结果会标记：
+`mock` provider 会给文本加 locale 前缀；`openai` 和 `deepl` provider 会调用真实翻译 API。生成结果都会标记：
 
 ```yaml
 reviewStatus: machine
@@ -48,3 +48,11 @@ store-release export --version 2.4.0 --format fastlane --out ./dist/fastlane-met
 ```
 
 导出的目录可以交给 Fastlane 或其他发布流水线使用。
+
+## 7. 导入 Fastlane metadata
+
+```bash
+store-release pull --version 2.4.0 --provider fastlane --in ./fastlane/metadata
+```
+
+默认不会覆盖已有 locale 文件；需要覆盖时显式添加 `--force`。导入内容会标记为 `human-reviewed`，因为 Fastlane metadata 通常来自已有人工维护目录。

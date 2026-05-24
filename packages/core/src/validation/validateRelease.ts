@@ -1,7 +1,7 @@
 import type { LocaleMetadata } from '../schema/locale.js';
 import type { ReleaseProject } from '../schema/release.js';
+import { validateAppStoreFieldRules } from './appStoreRules.js';
 import {
-  APP_STORE_PROMOTIONAL_TEXT_MAX_LENGTH,
   createValidationResult,
   DEFAULT_MAX_KEYWORDS_COUNT,
   type ValidateReleaseOptions,
@@ -204,24 +204,12 @@ function validateRequiredContent(
   );
 }
 
-function validatePromotionalText(
+function validateAppStoreFields(
   context: ValidationContext,
   localeName: string,
   metadata: LocaleMetadata,
 ): void {
-  if (
-    !metadata.promotionalText ||
-    metadata.promotionalText.length <= APP_STORE_PROMOTIONAL_TEXT_MAX_LENGTH
-  ) {
-    return;
-  }
-
-  context.warnings.push({
-    code: 'PROMOTIONAL_TEXT_LENGTH_TODO',
-    message: 'TODO: enforce platform-specific promotionalText max length with per-store rules.',
-    path: `locales.${localeName}.promotionalText`,
-    locale: localeName,
-  });
+  context.errors.push(...validateAppStoreFieldRules(localeName, metadata));
 }
 
 function validateLocale(
@@ -234,7 +222,7 @@ function validateLocale(
   validateUrls(context, localeName, metadata);
   validatePushReviewState(context, localeName, metadata);
   validateRequiredContent(context, localeName, metadata);
-  validatePromotionalText(context, localeName, metadata);
+  validateAppStoreFields(context, localeName, metadata);
 }
 
 export function validateRelease(

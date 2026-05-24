@@ -13,17 +13,17 @@
 
 ## v0.2
 
-- App Store Connect pull。
 - Fastlane metadata import。
 - 更完整的 App Store 字段长度规则。
 - 更清晰的人类可读 validation report。
 - CI 示例和 GitHub Actions 模板。
-
-## v0.3
-
 - OpenAI translator 真实实现。
 - DeepL translator 真实实现。
 - glossary locked terms 强约束。
+
+## v0.3
+
+- App Store Connect pull。
 - 按字段配置 tone、styleGuide、max length。
 - release 之间的结构化 diff report。
 

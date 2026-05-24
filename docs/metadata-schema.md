@@ -83,4 +83,4 @@ terms:
     note: '产品名保持统一。'
 ```
 
-`locked: true` 表示翻译 provider 应尽量保持该术语的指定译法。第一版 mock provider 会做基础替换，真实 provider 后续需要把 glossary 注入 prompt 或 API 参数。
+`locked: true` 表示翻译 provider 必须保持该术语的指定译法。mock provider 会做基础替换；OpenAI / DeepL provider 会在返回后校验 locked term，未包含指定译法时翻译失败。

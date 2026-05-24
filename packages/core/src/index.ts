@@ -3,6 +3,8 @@ export * from './schema/glossary.js';
 export * from './schema/locale.js';
 export * from './schema/release.js';
 export * from './validation/rules.js';
+export * from './validation/appStoreRules.js';
+export * from './validation/report.js';
 export * from './validation/validateRelease.js';
 export * from './diff/diffRelease.js';
 export * from './fs/loadProject.js';

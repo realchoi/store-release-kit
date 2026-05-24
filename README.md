@@ -61,10 +61,12 @@ store-release export --version 2.4.0 --format fastlane
 ```bash
 store-release init --app-id 1234567890 --default-locale zh-Hans --target-locales zh-Hans,en-US
 store-release validate --version 2.4.0 --strict
+store-release validate --version 2.4.0 --strict --json
 store-release diff --from 2.3.0 --to 2.4.0 --locale en-US
 store-release translate --version 2.4.0 --from zh-Hans --to en-US,ja --provider mock
+store-release translate --version 2.4.0 --from zh-Hans --to en-US --provider openai
 store-release export --version 2.4.0 --format fastlane --out ./dist/fastlane-metadata
-store-release pull --version 2.4.0 --provider mock
+store-release pull --version 2.4.0 --provider fastlane --in ./fastlane/metadata
 store-release push --version 2.4.0 --provider mock --dry-run
 ```
 
@@ -73,8 +75,8 @@ store-release push --version 2.4.0 --provider mock --dry-run
 ```text
 packages/core         schema、validation、diff、文件加载与写入
 packages/cli          store-release 命令行入口
-packages/translators  翻译 provider 接口和 mock/OpenAI/DeepL skeleton
-packages/adapters     store adapter、Fastlane export、App Store Connect skeleton
+packages/translators  翻译 provider 接口和 mock/OpenAI/DeepL provider
+packages/adapters     store adapter、Fastlane import/export、App Store Connect skeleton
 examples/simple-ios-app 完整 iOS 示例 metadata
 docs/                 架构、schema、工作流和路线图
 ```
@@ -103,7 +105,7 @@ reviewStatus: approved
 
 1. 在默认语言 locale 中维护源文案。
 2. 维护 `glossary.yml`，锁定产品名、品牌名和核心术语。
-3. 使用 `store-release translate --provider mock` 生成目标语言草稿。
+3. 使用 `store-release translate --provider mock`、`openai` 或 `deepl` 生成目标语言草稿。
 4. 用 `store-release diff` 审查变更。
 5. 人工审核后把 `reviewStatus` 改为 `human-reviewed` 或 `approved`。
 6. 运行 `store-release validate --strict`，再执行 `push --dry-run` 或 `export`。
@@ -129,11 +131,23 @@ dist/fastlane-metadata/en-US/keywords.txt
 dist/fastlane-metadata/en-US/release_notes.txt
 ```
 
+## Fastlane import 示例
+
+```bash
+store-release pull --version 2.4.0 --provider fastlane --in ./fastlane/metadata
+```
+
+默认不会覆盖已有 locale 文件；需要覆盖时显式添加 `--force`。
+
+## 真实翻译 provider
+
+OpenAI provider 使用 `OPENAI_API_KEY`，默认模型可通过 `OPENAI_MODEL` 覆盖。DeepL provider 使用 `DEEPL_API_KEY`，可通过 `DEEPL_API_URL` 指向 free API endpoint。真实翻译生成内容仍会标记为 `reviewStatus: machine`，默认不能直接 push。
+
 ## 未来路线图
 
 - MVP：CLI、schema、validation、mock translator、Fastlane export、dry-run push。
-- v0.2：App Store Connect pull、Fastlane import、字段长度规则。
-- v0.3：真实 OpenAI / DeepL provider、glossary 强约束、CI 模板。
+- v0.2：Fastlane import、字段长度规则、validation report、CI 模板。
+- v0.3：App Store Connect pull、release 之间的结构化 diff report。
 - v1.0：稳定 adapter API、多平台 store provider、Web UI 管理界面。
 
 ## 开发命令
@@ -145,6 +159,7 @@ pnpm test
 pnpm lint
 pnpm dev
 pnpm typecheck
+pnpm smoke:example
 ```
 
 开发调试 CLI 帮助信息时可以使用：

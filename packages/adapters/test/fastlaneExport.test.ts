@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import type { ReleaseProject } from '@store-release-kit/core';
-import { exportFastlaneMetadata } from '../src/index.js';
+import { exportFastlaneMetadata, importFastlaneMetadata } from '../src/index.js';
 
 describe('exportFastlaneMetadata', () => {
   it('writes fastlane metadata files and skips missing fields', async () => {
@@ -49,5 +49,26 @@ describe('exportFastlaneMetadata', () => {
       'focus,todo',
     );
     expect(await fs.pathExists(join(outDir, 'en-US', 'subtitle.txt'))).toBe(false);
+  });
+
+  it('imports fastlane metadata files into locale metadata', async () => {
+    const sourceDir = await mkdtemp(join(tmpdir(), 'fastlane-import-'));
+    const localeDir = join(sourceDir, 'en-US');
+    await fs.ensureDir(localeDir);
+    await fs.writeFile(join(localeDir, 'name.txt'), 'Focus Plan', 'utf8');
+    await fs.writeFile(join(localeDir, 'subtitle.txt'), 'Focus and todos', 'utf8');
+    await fs.writeFile(join(localeDir, 'keywords.txt'), 'focus,todo', 'utf8');
+    await fs.writeFile(join(localeDir, 'release_notes.txt'), 'New dashboard.', 'utf8');
+
+    const result = await importFastlaneMetadata({ sourceDir });
+
+    expect(result.locales['en-US']).toEqual({
+      locale: 'en-US',
+      name: 'Focus Plan',
+      subtitle: 'Focus and todos',
+      keywords: ['focus', 'todo'],
+      whatsNew: 'New dashboard.',
+      reviewStatus: 'human-reviewed',
+    });
   });
 });

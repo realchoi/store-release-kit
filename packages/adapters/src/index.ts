@@ -8,6 +8,7 @@ export * from './appstoreconnect/types.js';
 
 import { NotImplementedError, validateRelease } from '@store-release-kit/core';
 import { exportFastlaneMetadata } from './fastlane/exportMetadata.js';
+import { importFastlaneMetadata } from './fastlane/importMetadata.js';
 import type {
   ExportReleaseInput,
   ExportReleaseResult,
@@ -48,8 +49,25 @@ export class MockAdapter implements StoreAdapter {
 export class FastlaneAdapter implements StoreAdapter {
   name = 'fastlane' as const;
 
-  async pullRelease(_input: PullReleaseInput): Promise<PullReleaseResult> {
-    throw new NotImplementedError('Fastlane pull/import is not implemented in the first release.');
+  async pullRelease(input: PullReleaseInput): Promise<PullReleaseResult> {
+    if (!input.sourceDir) {
+      throw new NotImplementedError('Fastlane pull requires a local metadata directory via --in.');
+    }
+
+    const imported = await importFastlaneMetadata({ sourceDir: input.sourceDir });
+
+    return {
+      message: `Imported ${Object.keys(imported.locales).length} locale(s) from Fastlane metadata.`,
+      release: {
+        config: input.config,
+        base: {
+          version: input.version,
+          sourceLocale: input.config.defaultLocale,
+          status: 'draft',
+        },
+        locales: imported.locales,
+      },
+    };
   }
 
   async pushRelease(input: PushReleaseInput): Promise<PushReleaseResult> {

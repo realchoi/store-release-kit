@@ -16,6 +16,7 @@
     "lint": "pnpm -r lint",
     "format": "prettier --write .",
     "typecheck": "pnpm -r typecheck",
+    "smoke:example": "pnpm build && cd examples/simple-ios-app && node ../../packages/cli/dist/index.js validate --version 2.4.0 --strict && node ../../packages/cli/dist/index.js export --version 2.4.0 --format fastlane && node ../../packages/cli/dist/index.js push --version 2.4.0 --provider mock --dry-run",
     "dev": "pnpm --filter @store-release-kit/cli dev"
   },
   "devDependencies": {
